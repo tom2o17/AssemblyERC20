@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.13;
 
-contract ERC20_optimized {
+contract ERC20_Assembly {
     /**
      * 0x0          Name - Array size 
      * 0x20         Name - Array data 
@@ -9,16 +9,9 @@ contract ERC20_optimized {
      * 0x60         Symbol - array data 
      * 0x80         Decimals 
      * 0x100        Total Supply
-     * // TODO
      * 0x120        Balances mapping 
-     * 0x140        Allowances mapping
+     * 0x140        Allowances nested mapping
      */
-
-    uint256[4] gap;
-    mapping(address => uint256) private _balances;
-    mapping(address => mapping(address => uint256)) private _allowances;
-
-
 
     constructor (string memory name_, string memory symbol_) {
         assembly {
@@ -41,7 +34,6 @@ contract ERC20_optimized {
 
     function symbol() public view returns (string memory s) {
         assembly {
-            // s := mload(0x40)
             mstore(s, sload(0x40))
             mstore(add(s, 0x20), sload(0x60))
             mstore(0x40, add(s, 0x40))
@@ -57,7 +49,6 @@ contract ERC20_optimized {
 
     function name() public view returns (string memory n) {
         assembly {
-            // n := mload(0x40)
             mstore(n, sload(0x0))
             mstore(add(n, 0x20), sload(0x20))
             mstore(0x40, add(n, 0x40))
@@ -67,27 +58,38 @@ contract ERC20_optimized {
     function transfer(address to, uint256 amount) public {
         address from = msg.sender;
         assembly {
+            // Load the current balance of `from`
             mstore(0x0, from)
             mstore(0x20, 0x120)
             let location := keccak256(0x0, 0x40)
             let v := sload(location)
-            sstore(location, sub(v, amount))
-
+            // Check to see if balance >= amount -> case 1
+            let isValid := or(gt(v, amount), eq(v, amount))
+            switch isValid
+            case 1 {
+                // decrement the `from` balance
+                sstore(location, sub(v, amount))
+            } default {
+                stop()
+            }
+            // Load the balance of `to`
             mstore(0x0, to)
-            // mstore(0x20, 0x120)
             location := keccak256(0x0, 0x40)
             v := sload(location)
+            // Increment the `to` balance
             sstore(location, add(v, amount))
         }
     }
 
     function mint(address user, uint256 amount) public {
         assembly {
-            // Incrememnt the users balance 
+            // Load the balance of `user`
             mstore(0x0, user)
             mstore(0x20, 0x120)
             let location := keccak256(0x0, 0x40)
-            sstore(location, amount)
+            let v := sload(location)
+            // Increment the `user` balance 
+            sstore(location, add(amount, v))
 
             // Increment total supply 
             let ts := sload(0x100)
@@ -105,21 +107,80 @@ contract ERC20_optimized {
         }
     }
 
-    function translate(string memory input) public pure returns(string memory t) {
+    function approve(address spender, uint256 amount) public {
+        address owner = msg.sender;
+        assembly{
+            // Require that the owner has the amount
+            mstore(0x0, owner)
+            mstore(0x20, 0x120)
+            let location := keccak256(0x0, 0x40)
+            let v := sload(location)
+            // If their balance is >= amout -> case 1
+            let isValid := or(gt(v, amount), eq(v, amount))
+            switch isValid
+            case 1 {
+                // Get the hash of the slot and the owner addr
+                mstore(0x0, owner)
+                mstore(0x20, 0x140)
+                let location1 := keccak256(0x0, 0x40)
+                // Get the hash of `location1` and the spender addr
+                mstore(0x0, location1)
+                mstore(0x40, spender)
+                let location2 := keccak256(0x0, 0x40)
+                // Store to memeory
+                sstore(location2, amount)
+            } default {
+                stop()
+            }
+        }
+    }
+
+    function allowances(address owner, address spender) public view returns(uint256 a) {
+        assembly{
+            mstore(0x0, owner)
+            mstore(0x20, 0x140)
+            let location1 := keccak256(0x0, 0x40)
+            mstore(0x0, location1)
+            mstore(0x40, spender)
+            let location2 := keccak256(0x0, 0x40)
+            a := sload(location2)
+        }
+    }
+
+    function transferFrom(address from, address to, uint256 amount) public {
+        address spender = msg.sender;
         assembly {
-            // t := mload(0x40)
-            // let size := mload(input)
-            // let data := mload(add(input, 0x20))
-            // // Wtf is this pattern 
-            // mstore(t, size)
-            // mstore(add(t, 0x20), data)
-            // // set the pointer to free memory
-            // mstore(0x40, add(t, 0x40))
-
-            mstore(t, mload(input))
-            mstore(add(t, 0x20), mload(add(input, 0x20)))
-            mstore(0x40, add(t, 0x40))
-
+            // Get the hash of the slot and the owner addr
+            mstore(0x0, from)
+            mstore(0x20, 0x140)
+            let location1 := keccak256(0x0, 0x40)
+             // Get the hash of `location1` and the spender addr
+            mstore(0x0, location1)
+            mstore(0x40, spender)
+            let location2 := keccak256(0x0, 0x40)
+            // Store to memeory
+            let v := sload(location2)
+            // If their balance is >= amout -> case 1
+            let isValid := or(gt(v, amount), eq(v, amount))
+            switch isValid
+            case 1 {
+                // Get the balance of the sender
+                mstore(0x0, from)
+                mstore(0x20, 0x120)
+                let location := keccak256(0x0, 0x40)
+                let b := sload(location)
+                // Decrement their balance
+                sstore(location, sub(b, amount))
+                // Get the balance of the recipient
+                mstore(0x0, to)
+                mstore(0x20, 0x120)
+                let locationTo := keccak256(0x0, 0x40)
+                let y := sload(locationTo)
+                // Increment their balance
+                sstore(locationTo, add(y, amount))
+            } default {
+                stop()
+            }
         }
     }
 }

@@ -8,12 +8,12 @@ import "lib/openzeppelin-contracts/contracts/token/ERC20/ERC20.sol";
 contract CounterTest is Test {
     // string test;
     uint256 val;
-    ERC20_optimized public a20;
+    ERC20_Assembly public a20;
     ERC20 baseline;
 
     function setUp() public {
         // test = "Test";
-        a20 = new ERC20_optimized("A20","Better Coin");
+        a20 = new ERC20_Assembly("A20","Better Coin");
         baseline = new ERC20("Base", "test");
     }
 
@@ -33,11 +33,7 @@ contract CounterTest is Test {
         console.log(a20.symbol());
     }
 
-    function test_string() public {
-        console.log(
-            a20.translate("Thomas")
-        );
-    }
+    
 
     function test_decimals() public {
         console.log(
@@ -47,6 +43,7 @@ contract CounterTest is Test {
 
     function test_mint() public {
         a20.mint(address(this), 100);
+        a20.mint(address(this), 200);
         console.log(
             a20.balanceOf(address(this))
         );
@@ -56,6 +53,42 @@ contract CounterTest is Test {
         );
     }
 
+    function test_approve() public {
+        a20.mint(address(this), 100);
+        a20.approve(address(1), 100);
+        console.log("The approved amount is:", a20.allowances(address(this), address(1)));
+    }
+
+    function test_transferFrom() public {
+        a20.mint(address(this), 100);
+        a20.approve(address(1), 10);
+        vm.prank(address(1));
+        a20.transferFrom(address(this), address(1), 10);
+        console.log(a20.balanceOf(address(1)));
+        console.log(a20.balanceOf(address(this)));
+    }
+
+
+    function test_transferFrom_fail() public {
+        a20.mint(address(this), 100);
+        a20.approve(address(1), 10);
+        vm.prank(address(1));
+        a20.transferFrom(address(this), address(1), 100000);
+        console.log(a20.balanceOf(address(1)));
+        console.log(a20.balanceOf(address(this)));
+    }
+
+
+    function test_transferFrom_alt_fail() public {
+        a20.mint(address(this), 100);
+        a20.approve(address(1), 100000);
+        vm.prank(address(1));
+        a20.transferFrom(address(this), address(1), 10);
+        console.log(a20.balanceOf(address(1)));
+        console.log(a20.balanceOf(address(this)));
+    }
+
+
     function test_transfer() public {
         a20.mint(address(this), 100);
         a20.transfer(address(1), 50);
@@ -63,23 +96,5 @@ contract CounterTest is Test {
         console.log(a20.balanceOf(address(1)));
     }
 
-    // function test_msg() public {
-    //     a20.setmsg();
-    //     console.log(a20.getSender());
-    // }
 
-    // function test_setter() public {
-    //     a20.setName("test");
-    //     console.log(a20._name());
-    // }
-
-    // function testWeirdCase() public {
-    //     string memory s;
-    //     assembly {
-    //         s := sload(test.slot)
-    //         mstore(add(s, 0x20), sload(add(test.slot, 0x20)))
-    //         mstore(0x40, add(s, 0x40))
-    //     }
-    //     console.log(s);
-    // }
 }

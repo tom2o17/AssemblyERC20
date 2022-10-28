@@ -64,5 +64,24 @@ contract CounterTest is Test {
         return (slot, offset);
     }
 
+
+    function translate(string memory input) public pure returns(string memory t) {
+        assembly {
+            // t := mload(0x40)
+            // let size := mload(input)
+            // let data := mload(add(input, 0x20))
+            // // Wtf is this pattern 
+            // mstore(t, size)
+            // mstore(add(t, 0x20), data)
+            // // set the pointer to free memory
+            // mstore(0x40, add(t, 0x40))
+
+            mstore(t, mload(input))
+            mstore(add(t, 0x20), mload(add(input, 0x20)))
+            mstore(0x40, add(t, 0x40))
+
+        }
+    }
+
     
 }
