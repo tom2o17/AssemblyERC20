@@ -98,12 +98,13 @@ contract ERC20_Assembly {
         }
     }
 
-    function balanceOf(address user) public view returns(uint256 b) {
+    function balanceOf(address user) public view returns(uint256) {
         assembly {
             mstore(0x0, user)
             mstore(0x20, 0x120)
             let location := keccak256(0x0, 0x40)
-            b := sload(location)
+            // This method is cheaper than the other pattern
+            return(sload(keccak256(0x0, 0x40)), 32)
         }
     }
 
@@ -135,7 +136,7 @@ contract ERC20_Assembly {
         }
     }
 
-    function allowances(address owner, address spender) public view returns(uint256 a) {
+    function allowances(address owner, address spender) public view returns(uint256) {
         assembly{
             mstore(0x0, owner)
             mstore(0x20, 0x140)
@@ -143,7 +144,7 @@ contract ERC20_Assembly {
             mstore(0x0, location1)
             mstore(0x40, spender)
             let location2 := keccak256(0x0, 0x40)
-            a := sload(location2)
+            return(sload(location2),32)
         }
     }
 

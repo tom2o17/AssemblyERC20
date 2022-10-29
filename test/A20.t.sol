@@ -2,7 +2,7 @@
 pragma solidity ^0.8.13;
 
 import "forge-std/Test.sol";
-import "src/FirstDraft.sol";
+import "src/ERC20Assembly.sol";
 import "lib/openzeppelin-contracts/contracts/token/ERC20/ERC20.sol";
 
 contract CounterTest is Test {
@@ -17,23 +17,13 @@ contract CounterTest is Test {
         baseline = new ERC20("Base", "test");
     }
 
-    // function testBaseName() public {
-    //     console.log(baseline.name());
-    // }
-    // function testBaseSymbol() public {
-    //     console.log(baseline.symbol());
-    // }
-
     function test_name() public {
         console.log(a20.name());
     }
 
-
     function testsetVal() public {
         console.log(a20.symbol());
     }
-
-    
 
     function test_decimals() public {
         console.log(
@@ -94,6 +84,12 @@ contract CounterTest is Test {
         a20.transfer(address(1), 50);
         console.log(a20.balanceOf(address(this)));
         console.log(a20.balanceOf(address(1)));
+    }
+
+    function test_balanceOf() public {
+        console.log(
+            a20.balanceOf(address(this))
+        );
     }
 
 
