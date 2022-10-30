@@ -3,7 +3,7 @@
 <h3>Motivation and Background</h3>
 This repository serves as a learning resource, for developers wishing to learn more about inline assembly.
  
-<br>
+<br></br>
 Note: no "variables" are decleared w/n the contract. For information as to what slots are occupied for storage please refernce the variable map inclided at the top of the main contract.
 <br></br>
 
