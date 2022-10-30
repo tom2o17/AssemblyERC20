@@ -26,9 +26,9 @@ contract ERC20_Assembly {
         }
     }
 
-    function totalSupply() public view returns(uint256 ts) {
+    function totalSupply() public view returns(uint256) {
         assembly {
-            ts := sload(0x100)
+            return(sload(0x100), 0x20)
         }
     }
 
@@ -40,9 +40,9 @@ contract ERC20_Assembly {
         }
     }
 
-    function decimals() public view returns(uint256 d) {
+    function decimals() public view returns(uint256) {
         assembly {
-            d := sload(0x80)
+            return(sload(0x80), 0x20)
         }
     }
 
@@ -102,7 +102,6 @@ contract ERC20_Assembly {
         assembly {
             mstore(0x0, user)
             mstore(0x20, 0x120)
-            let location := keccak256(0x0, 0x40)
             // This method is cheaper than the other pattern
             return(sload(keccak256(0x0, 0x40)), 32)
         }
