@@ -3,18 +3,12 @@ pragma solidity ^0.8.13;
 
 import "forge-std/Test.sol";
 import "src/ERC20Assembly.sol";
-import "lib/openzeppelin-contracts/contracts/token/ERC20/ERC20.sol";
 
 contract CounterTest is Test {
-    // string test;
-    uint256 val;
     ERC20_Assembly public a20;
-    ERC20 baseline;
 
     function setUp() public {
-        // test = "Test";
-        a20 = new ERC20_Assembly("A20","Better Coin");
-        baseline = new ERC20("Base", "test");
+        a20 = new ERC20_Assembly("A20","Assembly ERC20");
     }
 
     function test_name() public {
