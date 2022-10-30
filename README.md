@@ -4,7 +4,7 @@
 This repository serves as a learning resource, for developers wishing to learn more about inline assembly.
 
 <br>
-Note: no "variables" are decleared w/n the contract. For information as to what slots are occupied for storage please reference the variable map inclided at the top of the main contract.
+Note: no "variables" are decleared w/n the contract. For information as to what slots are occupied for storage please reference the variable map at the top of the contract.
 <br></br>
 
 <h2>Installing Dependencies</h2>
